@@ -28,8 +28,10 @@
 #define MOT_RIGHT_IN1 4
 #define MOT_RIGHT_IN2 13
 
-#define MOT_MAX_SPEED_LEFT 75
-#define MOT_MAX_SPEED_RGHT 80
+#define MOT_MAX_SPEED_LEFT 86
+#define MOT_MAX_SPEED_RGHT 92
+//#define MOT_MAX_SPEED_LEFT 140
+//#define MOT_MAX_SPEED_RGHT 150
 
 const TCS230::PinMapping leftPins{LEFT_S0, LEFT_S1, LEFT_S2, LEFT_S3, LEFT_OUT};
 const TCS230::PinMapping rightPins{RIGHT_S0, RIGHT_S1, RIGHT_S2, RIGHT_S3, RIGHT_OUT};
@@ -96,24 +98,31 @@ void setMotorSpeed(L298N &motor, float speed, uint8_t scale) {
  * linear mapping between these.
  */
 void setMotorSpeeds(double &target) {
-    target *= 1.5;
+    const float ohShit = 1.0f;
+    target *= 1.6;
 
     float hecticScaling;
     float aTarget = abs(target);
     if (aTarget > 0.1) {
-        hecticScaling = 1.0 - 0.6 * (aTarget - 0.1);
+        hecticScaling = 1.0 - 0.8 * (aTarget - 0.1);
     } else {
         hecticScaling = 1.0;
     }
+
+    // turn more sharply if required
+    if (aTarget > 0.8) {
+        target *= 2;
+    }
+
     auto leftMax = (uint8_t) (MOT_MAX_SPEED_LEFT * hecticScaling);
     auto rghtMax = (uint8_t) (MOT_MAX_SPEED_RGHT * hecticScaling);
 
     if (target < 0) {
         setMotorSpeed(leftMotor, 1.0f, leftMax);
-        setMotorSpeed(rightMotor, (2.5f * target + 1.0f), rghtMax);
+        setMotorSpeed(rightMotor, (ohShit * target + 1.0f), rghtMax);
     } else {
         setMotorSpeed(rightMotor, 1.0f, rghtMax);
-        setMotorSpeed(leftMotor, (-2.5f * target + 1.0f), leftMax);
+        setMotorSpeed(leftMotor, (-1 * ohShit * target + 1.0f), leftMax);
     }
 }
 
